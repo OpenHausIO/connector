@@ -1,0 +1,30 @@
+{
+  "name": "connector",
+  "version": "1.0.0",
+  "description": "Connector between backend &amp; local network",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No test specified\" && exit 0",
+    "start": "./node_modules/.bin/nodemon index.js",
+    "lint": "./node_modules/.bin/eslint .",
+    "lint:fix": "./node_modules/.bin/eslint --fix ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenHausIO/connector.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OpenHausIO/connector/issues"
+  },
+  "homepage": "https://github.com/OpenHausIO/connector#readme",
+  "dependencies": {
+    "ws": "^8.5.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0",
+    "eslint": "^8.10.0",
+    "nodemon": "^2.0.15"
+  }
+}
