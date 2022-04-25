@@ -27,11 +27,6 @@ function bootstrap() {
                             // filter only for ehternet interfaces
                             return iface.type === "ETHERNET";
 
-                        }).filter((iface) => {
-
-                            // filter for transport protocols passed as env variable
-                            return process.env.TRANSPORT_FILTER.split(",").includes(iface.transport)
-
                         }).forEach((iface) => {
 
                             // map ws endpoint with interface obj
@@ -64,13 +59,13 @@ function bootstrap() {
             });
 
             ws.on("error", (err) => {
-                console.error(err);
+                reject(err);
             });
 
             ws.on("close", () => {
 
                 console.warn("WebSocket conneciton closed, re try...");
-                process.exit(1)
+                process.exit(1);
 
             });
 

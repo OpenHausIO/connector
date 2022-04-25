@@ -32,7 +32,6 @@ const path = require("path");
         BACKEND_PROTOCOL: "http",
         BACKEND_HOST: "127.0.0.1",
         BACKEND_PORT: "8080",
-        TRANSPORT_FILTER: "",
         RECONNECT_DELAY: "3000"
     }, env.parsed, process.env);
 
