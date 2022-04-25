@@ -7,17 +7,21 @@ const wsStream = require("./ws-stream.js");
  * 
  * @param {String} uri WebSocket URL endpoint
  */
-function bridge(uri, settings, socket) {
+function bridge(uri, settings) {
     try {
 
         let retry = false;
 
         let upstream = wsStream(uri);
-        let stream = require(`./sockets/${socket}`)(settings);
+        let stream = require(`./sockets/${settings.socket}`)(settings);
 
         //@TODO implement "waiting for data from upstream"
         // if socket stream closes (successful)
         // re-create one or wait for upstream data?
+
+        upstream.on("error", (err) => {
+            console.error("Could not bridge interface", settings, err);
+        });
 
         upstream.on("close", () => {
             if (!retry) {
@@ -27,7 +31,7 @@ function bridge(uri, settings, socket) {
                 setTimeout(() => {
 
                     stream.end();
-                    bridge(uri, settings, socket);
+                    bridge(uri, settings);
 
                 }, Number(process.env.RECONNECT_DELAY));
 
@@ -42,7 +46,7 @@ function bridge(uri, settings, socket) {
                 setTimeout(() => {
 
                     upstream.end();
-                    bridge(uri, settings, socket);
+                    bridge(uri, settings);
 
                 }, Number(process.env.RECONNECT_DELAY));
 
@@ -61,7 +65,7 @@ function bridge(uri, settings, socket) {
 
 module.exports = (map, ws) => {
 
-    console.log("ws", ws.protocol);
+    console.log("ws", ws.protocol, map);
 
     ws.on("message", (data) => {
 
@@ -82,7 +86,7 @@ module.exports = (map, ws) => {
 
     });
 
-    for (let [uri, { socket, settings }] of map) {
+    for (let [uri, { settings }] of map) {
 
         // parse websocket urls
         let url1 = new url.URL(ws.url);
@@ -91,9 +95,9 @@ module.exports = (map, ws) => {
         // override http(s) with ws(s)
         url2.protocol = url1.protocol;
 
-        console.log(`Bridge "%s" <-> ${socket}://${settings.host}:${settings.port}`, url2);
+        console.log(`Bridge "%s" <-> ${settings.socket}://${settings.host}:${settings.port}`, url2);
 
-        bridge(url2, settings, socket);
+        bridge(url2, settings);
 
     }
 

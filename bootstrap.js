@@ -18,10 +18,12 @@ function bootstrap() {
 
                 } else {
 
-                    let { body, url } = data;
+                    let { body } = data;
                     let map = new Map();
 
-                    body.forEach(({ _id, interfaces }) => {
+                    body.filter(({ enabled }) => {
+                        return enabled;
+                    }).forEach(({ _id, interfaces }) => {
                         interfaces.filter((iface) => {
 
                             // filter only for ehternet interfaces
@@ -30,7 +32,7 @@ function bootstrap() {
                         }).forEach((iface) => {
 
                             // map ws endpoint with interface obj
-                            map.set(`${url}/${_id}/interfaces/${iface._id}`, iface);
+                            map.set(`${process.env.BACKEND_URL}/api/devices/${_id}/interfaces/${iface._id}`, iface);
 
                         });
                     });
