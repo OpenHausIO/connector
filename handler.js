@@ -65,7 +65,7 @@ function bridge(uri, settings) {
 
 module.exports = (map, ws) => {
 
-    console.log("ws", ws.protocol, map);
+    console.log("ws protocol: %s, map:", ws.protocol, map);
 
     ws.on("message", (data) => {
 
