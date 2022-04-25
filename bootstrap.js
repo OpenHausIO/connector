@@ -67,7 +67,11 @@ function bootstrap() {
             ws.on("close", () => {
 
                 console.warn("WebSocket conneciton closed, re try...");
-                process.exit(1);
+                //process.exit(1);
+
+                setTimeout(() => {
+                    bootstrap();
+                }, 3000);
 
             });
 
