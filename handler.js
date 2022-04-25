@@ -1,14 +1,67 @@
-const url = require("url")
+const url = require("url");
 const wsStream = require("./ws-stream.js");
 
-const socket_tcp = require("./sockets/tcp.js");
-const socket_udp = require("./sockets/udp.js");
-const socket_raw = require("./sockets/raw.js");
-const socket_ws = require("./sockets/ws.js");
+/**
+ * @function bridge
+ * Birdges a WebSocket endpoint to a network socket
+ * 
+ * @param {String} uri WebSocket URL endpoint
+ */
+function bridge(uri, settings, socket) {
+    try {
+
+        let retry = false;
+
+        let upstream = wsStream(uri);
+        let stream = require(`./sockets/${socket}`)(settings);
+
+        //@TODO implement "waiting for data from upstream"
+        // if socket stream closes (successful)
+        // re-create one or wait for upstream data?
+
+        upstream.on("close", () => {
+            if (!retry) {
+
+                retry = true;
+
+                setTimeout(() => {
+
+                    stream.end();
+                    bridge(uri, settings, socket);
+
+                }, Number(process.env.RECONNECT_DELAY));
+
+            }
+        });
+
+        stream.on("close", () => {
+            if (!retry) {
+
+                retry = true;
+
+                setTimeout(() => {
+
+                    upstream.end();
+                    bridge(uri, settings, socket);
+
+                }, Number(process.env.RECONNECT_DELAY));
+
+            }
+        });
+
+        upstream.pipe(stream);
+        stream.pipe(upstream);
+
+    } catch (err) {
+
+        console.error("Error happend %s", uri, err);
+
+    }
+}
 
 module.exports = (map, ws) => {
 
-    console.log("ws", ws.protocol)
+    console.log("ws", ws.protocol);
 
     ws.on("message", (data) => {
 
@@ -29,7 +82,7 @@ module.exports = (map, ws) => {
 
     });
 
-    for ([uri, { transport, settings: { host, port } }] of map) {
+    for (let [uri, { socket, settings }] of map) {
 
         // parse websocket urls
         let url1 = new url.URL(ws.url);
@@ -38,25 +91,9 @@ module.exports = (map, ws) => {
         // override http(s) with ws(s)
         url2.protocol = url1.protocol;
 
-        console.log(`Bridge "%s" <-> ${transport}://${host}:${port}`, url2)
+        console.log(`Bridge "%s" <-> ${socket}://${settings.host}:${settings.port}`, url2);
 
-        try {
-
-            let upstream = wsStream(url2, {
-                // duplex stream options
-            });
-
-            let socket = require(`./sockets/${transport}`)(host, port);
-
-            upstream.pipe(socket);
-            socket.pipe(upstream);
-
-
-        } catch (err) {
-
-            console.error("Error happendm %s", url2, err)
-
-        }
+        bridge(url2, settings, socket);
 
     }
 
