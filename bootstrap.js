@@ -71,7 +71,7 @@ function bootstrap() {
 
                 setTimeout(() => {
                     bootstrap();
-                }, 3000);
+                }, 5000);
 
             });
 
