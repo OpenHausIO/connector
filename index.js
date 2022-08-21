@@ -32,7 +32,8 @@ const path = require("path");
         BACKEND_PROTOCOL: "http",
         BACKEND_HOST: "127.0.0.1",
         BACKEND_PORT: "8080",
-        RECONNECT_DELAY: "3000"
+        RECONNECT_DELAY: "3000",
+        ENABLE_SSDP: "true"
     }, env.parsed, process.env);
 
 
@@ -46,3 +47,4 @@ const path = require("path");
 
 
 require("./bootstrap.js");
+require("./autodiscover.js");
