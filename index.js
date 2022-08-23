@@ -5,46 +5,40 @@ const path = require("path");
 // 2) Try to connect to socket
 // 3) if conneciton not possible, try again when data from ws arrives
 
+let env = {};
 
-(() => {
+try {
 
-    let env = {};
+    env = require("dotenv").config({
+        path: path.resolve(process.cwd(), ".env")
+    });
 
-    try {
-
-        env = require("dotenv").config({
-            path: path.resolve(process.cwd(), ".env")
-        });
-
-        if (env.error) {
-            env.parsed = {};
-        }
-
-    } catch (err) {
-        console.log("Could not load dotenv", err.message);
+    if (env.error) {
+        env.parsed = {};
     }
 
-
-    // default environment variables
-    process.env = Object.assign({
-        NODE_ENV: "production",
-        BACKEND_URL: "",
-        BACKEND_PROTOCOL: "http",
-        BACKEND_HOST: "127.0.0.1",
-        BACKEND_PORT: "8080",
-        RECONNECT_DELAY: "3000",
-        ENABLE_SSDP: "true"
-    }, env.parsed, process.env);
+} catch (err) {
+    console.log("Could not load dotenv", err.message);
+}
 
 
-    // build backend url if its empty
-    if (process.env.BACKEND_URL === "") {
-        process.env.BACKEND_URL = `${process.env.BACKEND_PROTOCOL}://`;
-        process.env.BACKEND_URL += `${process.env.BACKEND_HOST}:${process.env.BACKEND_PORT}`;
-    }
+// default environment variables
+process.env = Object.assign({
+    NODE_ENV: "production",
+    BACKEND_URL: "",
+    BACKEND_PROTOCOL: "http",
+    BACKEND_HOST: "127.0.0.1",
+    BACKEND_PORT: "8080",
+    RECONNECT_DELAY: "15",
+    ENABLE_SSDP: "true"
+}, env.parsed, process.env);
 
-})();
+
+// build backend url if its empty
+if (process.env.BACKEND_URL === "") {
+    process.env.BACKEND_URL = `${process.env.BACKEND_PROTOCOL}://`;
+    process.env.BACKEND_URL += `${process.env.BACKEND_HOST}:${process.env.BACKEND_PORT}`;
+}
 
 
 require("./bootstrap.js");
-require("./autodiscover.js");
