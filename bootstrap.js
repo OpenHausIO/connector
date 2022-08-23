@@ -4,9 +4,11 @@ const WebSocket = require("ws");
 
 const request = require("./request.js");
 
+// retry flags
+var crashed = false;
+var counter = 0;
+
 function bootstrap() {
-
-
     Promise.all([
 
         // fetch devices from api
@@ -61,42 +63,70 @@ function bootstrap() {
             });
 
             ws.on("error", (err) => {
+                //console.error("Websocket", err);
                 reject(err);
             });
 
-            ws.on("close", () => {
+            ws.on("close", (code) => {
+                if (code === 1006) {
 
-                console.warn("WebSocket conneciton closed, re try...");
-                //process.exit(1);
+                    retry();
 
-                setTimeout(() => {
-                    bootstrap();
-                }, 5000);
+                } else {
 
+                    console.warn("WebSocket (event) conneciton closed", code);
+
+                }
             });
 
         })
 
     ]).then(([map, ws]) => {
 
+        // reset flags
+        counter = 0;
+        crashed = false;
+
         console.log("Read to bridge traffic, interfaces:", map.size, ws.url);
 
+        //require("./autodiscover.js");
         require("./handler.js")(map, ws);
 
     }).catch((err) => {
+        if (err.code === "ECONNREFUSED") {
 
-        console.error(err);
-        process.exit(1);
+            retry();
 
-        /*
-        setTimeout(() => {
-            bootstrap();
-        }, 3000);
-        */
+        } else {
 
+            console.error(err);
+            process.exit(1);
+
+        }
     });
-
 }
 
 
+function retry() {
+
+    if (!crashed) {
+
+        console.log("Backend %s not reachable, re try attempt %d...", process.env.BACKEND_URL, counter + 1);
+
+        setTimeout(() => {
+
+            counter += 1;
+            crashed = false;
+
+            bootstrap();
+
+        }, Number(process.env.RECONNECT_DELAY * 1000) || 3000);
+
+    }
+
+    crashed = true;
+
+}
+
 bootstrap();
+
