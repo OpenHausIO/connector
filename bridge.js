@@ -1,11 +1,12 @@
 #! /usr/bin/node
 
+const { EOL } = require("os");
 const {
     isMainThread,
     workerData
 } = require("worker_threads");
 
-const optimist = require("optimist");
+const minimist = require("minimist");
 
 const bridge = require("./system/bridge.js");
 
@@ -14,23 +15,16 @@ const bridge = require("./system/bridge.js");
 
 // TODO If host&port are missing read/write from/to stdin/stdout
 // Usefull for serial communiction or debugging
-
-// TODO dont work like that, chaning looks terrible ugly...
-optimist.describe("upstream", "WebSocket upstream to backend");
-optimist.describe("socket", "Network socket type: tcp|udp|raw");
-optimist.describe("host", "Host to with connect to");
-optimist.describe("port", "Host port to with connect to");
-optimist.describe("settings", "Settings object from interface as json string");
-optimist.describe("options", "Duplex stream optinos passed to WebSocket.createWebSocketStream");
-
-
-const { argv } = optimist.default({
-    upstream: null,
-    socket: "tcp",
-    host: null,
-    port: null,
-    settings: "{}",
-    options: "{}"
+const argv = minimist(process.argv, {
+    boolean: ["help"],
+    default: {
+        upstream: null,
+        socket: "tcp",
+        host: null,
+        port: null,
+        settings: "{}",
+        options: "{}"
+    }
 });
 
 
@@ -40,8 +34,16 @@ argv.options = JSON.parse(argv.options);
 
 
 // check arguments if used as cli client
-if (isMainThread && (!argv.upstream || !argv.host || !argv.port)) {
-    console.log("Specify more arguments!");
+if ((isMainThread && (!argv.upstream || !argv.host || !argv.port)) || argv.help) {
+    console.group("Usage of bridge.js as cli tool:", EOL);
+    console.log(`bridge.js --upstream="http://example.com" --host="127.0.0.1" --port="8080"`, EOL);
+    console.log("--upstream\tWebSocket upstream to backend");
+    console.log("--socket\tNetwork socket type: tcp|udp|raw");
+    console.log("--host\tHost to connect to");
+    console.log("--port\tHost port to connect to");
+    console.log("[--settings]\tSettings object from interface as json string");
+    console.log("[--options]\tDuplex stream optinos passed to WebSocket.createWebSocketStream");
+    console.log("");
     process.exit(1);
 }
 
@@ -53,6 +55,7 @@ const STREAMS = {
 };
 
 
+// NOTE add `&& require.main.filename === __filename` to check?!
 if (isMainThread && argv.upstream && argv.host && argv.port) {
 
     let settings = Object.assign({
