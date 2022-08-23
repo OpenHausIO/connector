@@ -2,7 +2,7 @@ const dgram = require("dgram");
 const url = require("url");
 
 const WebSocket = require("ws");
-const { xml2json } = require('xml-js');
+const { xml2json } = require("xml-js");
 
 const request = require("./request");
 
