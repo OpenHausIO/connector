@@ -89,7 +89,10 @@ function bootstrap() {
 
         console.log("Read to bridge traffic, interfaces:", map.size, ws.url);
 
-        //require("./autodiscover.js");
+        if (process.env.ENABLE_SSDP === "true") {
+            //require("./autodiscover.js");
+        }
+
         require("./handler.js")(map, ws);
 
     }).catch((err) => {
