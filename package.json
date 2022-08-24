@@ -9,7 +9,8 @@
     "start": "./node_modules/.bin/nodemon index.js",
     "lint": "./node_modules/.bin/eslint .",
     "lint:fix": "./node_modules/.bin/eslint --fix .",
-    "build": "npx pkg ."
+    "build": "npx pkg .",
+    "postinstall": "scripts/post-install.sh"
   },
   "pkg": {
     "scripts": [
