@@ -14,6 +14,11 @@ To controll your devices on your local network, it is necessary to have a piece 
 | BACKEND_PORT     | `8080`        | Backend Webserver port                                 |
 | RECONNECT_DELAY  | `15`          | Delay between disconnect & connecting again in Seconds |
 | ENABLE_SSDP      | `true`        | Enable SSDP Autodiscover?                              |
+| ALLOW_HALF_OPEN  | `false`       | Allow half open bridging                               |
+
+## Installation
+Download the latest version from the [release page]("./releases).<br />
+Execute the binary or install node.js and run the script as systemd service.
 
 ## Usage of single bridge
 ### General
@@ -47,3 +52,7 @@ Usage of bridge.js as cli tool:
 ```sh
 ./bridge.js --upstream="ws://127.0.0.1:8080/api/devices/62a4c005b9e05a649f6cec57/interfaces/62a4c005b9e05a649f6cec58" --host="samsung-tv.lan" --port="8080"
 ```
+
+## Note
+This is bascily the same concept as [Websockify](https://github.com/novnc/websockify).<br />
+Forward data between network socket & Websocket.
