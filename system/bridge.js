@@ -20,6 +20,33 @@ function bridge(uri, settings, options) {
             console.error(`Could not bridge interface ${settings.socket}://${settings.host}:${settings.port}${EOL}`, err);
         });
 
+        stream.on("error", (err) => {
+            if (["ECONNRESET", "ECONNREFUSED"].includes(err.code) && process.env.ALLOW_HALF_OPEN === "true") {
+
+                // waiting for data from websocket connection
+                // before re-try to connect
+                upstream.unpipe();
+                stream.unpipe();
+
+                // create here new socket stream instance
+                // NOTE Overriding steam object is stupid
+
+                // NOTE: DRAFT!
+                upstream.once("data", (chunk) => {
+
+                    let stream = require(`../sockets/${settings.socket}`)(settings);
+
+                    upstream.pipe(stream);
+                    stream.pipe(upstream);
+
+                    // neccassary to not loose data?!
+                    stream.write(chunk);
+
+                });
+
+            }
+        });
+
         upstream.pipe(stream);
         stream.pipe(upstream);
 

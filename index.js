@@ -30,7 +30,8 @@ process.env = Object.assign({
     BACKEND_HOST: "127.0.0.1",
     BACKEND_PORT: "8080",
     RECONNECT_DELAY: "15",
-    ENABLE_SSDP: "true"
+    ENABLE_SSDP: "true",
+    ALLOW_HALF_OPEN: "false"
 }, env.parsed, process.env);
 
 
