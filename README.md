@@ -17,7 +17,7 @@ To controll your devices on your local network, it is necessary to have a piece 
 | ALLOW_HALF_OPEN  | `false`       | Allow half open bridging                               |
 
 ## Installation
-Download the latest version from the [release page]("./releases).<br />
+Download the latest version from the [release page](./releases).<br />
 Execute the binary or install node.js and run the script as systemd service.
 
 ## Usage of single bridge
