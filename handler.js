@@ -18,7 +18,8 @@ async function spawn(url2, settings) {
             upstream: String(url2),
             settings,
             options: {}
-        }
+        },
+        env: process.env
     });
 
     worker.on("error", (err) => {
@@ -39,57 +40,68 @@ async function spawn(url2, settings) {
 
 module.exports = (map, ws) => {
 
-    MAPPINGS.forEach(async (worker) => {
-        console.log("Termoinate worker", worker.threadId);
-        await worker.terminate();
+    /* eslint-disable  no-unused-vars */
+    let pendingPromises = Array.from(MAPPINGS).map(([url, worker]) => {
+        console.log("Terminate worker", worker.threadId);
+        return worker.terminate();
     });
 
-    console.log("ws protocol: %s, map:", ws.protocol, map);
+    Promise.all(pendingPromises).then(() => {
 
-    ws.on("message", (msg) => {
+        console.log("Span new worker bridges:");
+        console.log("ws protocol: %s, map:", ws.protocol, map);
 
-        // parse data
-        msg = JSON.parse(msg);
+        ws.on("message", (msg) => {
 
-        // handle only device specifiy events.
-        // Like added & updated devices rsp. interfaces
-        if (msg.component === "devices" && ["add", "update"].includes(msg.event)) {
+            // parse data
+            msg = JSON.parse(msg);
 
-            console.log("Handle updated/added devices", msg);
+            // handle only device specifiy events.
+            // Like added & updated devices rsp. interfaces
+            if (msg.component === "devices" && ["add", "update"].includes(msg.event)) {
 
-            msg.data.interfaces.forEach((iface) => {
+                console.log("Handle updated/added devices", msg);
 
-                // parse websocket urls
-                let url1 = new url.URL(ws.url);
-                let url2 = new url.URL(`${process.env.BACKEND_URL}/api/devices/${msg.data._id}/interfaces/${iface._id}`);
+                msg.data.interfaces.forEach((iface) => {
 
-                url2.protocol = url1.protocol;
+                    // parse websocket urls
+                    let url1 = new url.URL(ws.url);
+                    let url2 = new url.URL(`${process.env.BACKEND_URL}/api/devices/${msg.data._id}/interfaces/${iface._id}`);
 
-                spawn(url2, iface.settings);
+                    url2.protocol = url1.protocol;
 
-            });
+                    spawn(url2, iface.settings);
 
-        } else {
+                });
 
-            //console.log("[event]", data);
+            } else {
+
+                //console.log("[event]", data);
+
+            }
+
+        });
+
+        for (let [uri, { settings }] of map) {
+
+            // parse websocket urls
+            let url1 = new url.URL(ws.url);
+            let url2 = new url.URL(uri);
+
+            // override http(s) with ws(s)
+            url2.protocol = url1.protocol;
+
+            console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+
+            spawn(url2, settings);
 
         }
 
+    }).catch((err) => {
+
+        console.error("Could not terminate all worker", err);
+        process.exit(1);
+
     });
-
-    for (let [uri, { settings }] of map) {
-
-        // parse websocket urls
-        let url1 = new url.URL(ws.url);
-        let url2 = new url.URL(uri);
-
-        // override http(s) with ws(s)
-        url2.protocol = url1.protocol;
-
-        console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
-
-        spawn(url2, settings);
-
-    }
 
 };
