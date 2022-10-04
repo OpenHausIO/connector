@@ -31,7 +31,8 @@ process.env = Object.assign({
     BACKEND_PORT: "8080",
     RECONNECT_DELAY: "15",
     ENABLE_SSDP: "true",
-    ALLOW_HALF_OPEN: "false"
+    ALLOW_HALF_OPEN: "true",
+    AUTOCONNECT: "true"
 }, env.parsed, process.env);
 
 
@@ -43,3 +44,4 @@ if (process.env.BACKEND_URL === "") {
 
 
 require("./bootstrap.js");
+//require("./autodiscover.js");
