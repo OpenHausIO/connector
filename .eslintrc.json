@@ -25,6 +25,7 @@
                 "avoidEscape": true, // Does not work https://eslint.org/docs/rules/quotes#avoidescape
                 "allowTemplateLiterals": true
             }
-        ]
+        ],
+        "no-inner-declarations": "off"
     }
 }
