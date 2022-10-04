@@ -12,7 +12,10 @@ module.exports = ({ host, port }) => {
         read(size) {
             console.log("Read called", size);
         },
-        end() {
+        end(chunk) {
+            if (chunk) {
+                socket.send(chunk);
+            }
             socket.close();
         }
     });
