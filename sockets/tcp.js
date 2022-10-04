@@ -2,7 +2,18 @@ const net = require("net");
 
 module.exports = ({ host, port }) => {
 
+    /*
+    for(key in options){
+        if(options[key] instanceof Array){
+            socket[key].apply(socket, options[key]);
+        }
+    }
+    */
+
     let socket = new net.Socket();
+
+    // keep socket alive
+    //socket.setKeepAlive(true, 60000);
 
     socket.on("error", (err) => {
         console.error(`[error] tcp://${host}:${port}`, err);
