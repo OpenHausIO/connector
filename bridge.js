@@ -48,13 +48,6 @@ if ((isMainThread && (!argv.upstream || !argv.host || !argv.port)) || argv.help)
 }
 
 
-// global var for events
-const STREAMS = {
-    upstream: null,
-    downstream: null
-};
-
-
 // NOTE add `&& require.main.filename === __filename` to check?!
 if (isMainThread && argv.upstream && argv.host && argv.port) {
 
@@ -70,11 +63,7 @@ if (isMainThread && argv.upstream && argv.host && argv.port) {
     }, argv.options);
 
     // bridge the websocket stream to underlaying network socket
-    let br = bridge(argv.upstream, settings, options);
-
-    // attach to global vars
-    STREAMS.upstream = br.upstream;
-    STREAMS.downstream = br.stream;
+    bridge(argv.upstream, settings, options);
 
 } else {
 
@@ -82,38 +71,6 @@ if (isMainThread && argv.upstream && argv.host && argv.port) {
     let { upstream, settings, options } = workerData;
 
     // bridge the websocket stream to underlaying network socket
-    let br = bridge(upstream, settings, options);
-
-    // attach to global vars
-    STREAMS.upstream = br.upstream;
-    STREAMS.downstream = br.stream;
+    bridge(upstream, settings, options);
 
 }
-
-
-// handle returned streams
-Object.keys(STREAMS).forEach((key) => {
-
-    // exit codes explained:
-    // 1 = general error, e.g. insueffecnt cli arguments
-    // 100 = downstream error (host/device)
-    // 200 = upstream error (backend)
-
-    let stream = STREAMS[key];
-
-    stream.on("close", () => {
-        console.log("stream close called");
-        process.exit(0);
-    });
-
-    stream.on("error", (err) => {
-        console.error(err);
-        process.exit(1);
-    });
-
-    stream.on("end", () => {
-        console.log("stream ended");
-        process.exit(0);
-    });
-
-});
