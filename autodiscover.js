@@ -102,7 +102,7 @@ socket.on("message", async (msg, { address, port }) => {
                 Buffer.from("\r\n")
             ]);
 
-            console.log(`Send to server from client udp://${address}:${port} `, data);
+            console.log(`Send to server from client udp://${address}:${port} `, data.toString());
 
             ws.send(data);
 
