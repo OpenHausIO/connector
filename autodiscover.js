@@ -21,7 +21,7 @@ const socket = dgram.createSocket({
 });
 
 
-async function parseHeader(msg) {
+async function parseHeader(msg, { address, port }) {
 
     let headers = {};
     let lines = msg.toString().split("\r\n");
@@ -46,6 +46,10 @@ async function parseHeader(msg) {
         headers[k] = v;
 
     });
+
+    // add additional client headers
+    headers["X-REMOTE-ADDRESS"] = address;
+    headers["X-REMOTE-PORT"] = port;
 
     // for better handling, convert to lowercase
     type = type.toLowerCase();
@@ -87,35 +91,71 @@ function fetchLocation(uri) {
 }
 
 socket.on("message", async (msg, { address, port }) => {
-    try {
+    if (ws.readyState === ws.OPEN) {
+        try {
 
-        let { headers: { location, nts }, type } = await parseHeader(msg);
+            // prase header & set additional remote header
+            // X-REMOTE-ADDRESS = address
+            // X-REMOTE-PORT = port
+            let { headers, type } = await parseHeader(msg, {
+                address,
+                port
+            });
 
-        if (type === "notify" && nts === "ssdp:alive" && location) {
 
-            let description = await fetchLocation(location);
+            // extract location & nts
+            // (to fetch description)
+            let { location, nts } = headers;
 
-            let data = Buffer.concat([
-                Buffer.from(msg),
-                Buffer.from(description),
-                Buffer.from("\r\n"),
-                Buffer.from("\r\n")
-            ]);
 
-            console.log(`Send to server from client udp://${address}:${port} `, data.toString());
+            // create from header object
+            // a new `msg` like string
+            /*
+            let head = Object.keys(headers).map((key) => {
+                return `${key}=${headers[key]}\r\n`;
+            });
+            */
 
-            ws.send(data);
 
-        } else {
+            // check if we handle a notification & device is alive
+            // if so do a http requestion to the location header value
+            if (type === "notify" && nts === "ssdp:alive" && location) {
 
-            ws.send(msg);
+                let description = await fetchLocation(location);
+
+                let data = Buffer.concat([
+                    //Buffer.from(type),    // DRAFT!
+                    //Buffer.from(head),    // DRAFT!
+                    Buffer.from(msg),
+                    Buffer.from(description),
+                    Buffer.from("\r\n"),
+                    Buffer.from("\r\n")
+                ]);
+
+                // feedback
+                //console.log(`Send to server from client udp://${address}:${port} `, data.toString());
+
+                ws.send(data);
+
+            } else {
+
+                /*
+                let data = Buffer.concat([
+                    Buffer.from(type),
+                    Buffer.from(head)
+                ]);
+                */
+
+                ws.send(msg);
+
+            }
+
+
+        } catch (err) {
+
+            console.error(err);
 
         }
-
-    } catch (err) {
-
-        console.error(err);
-
     }
 });
 
