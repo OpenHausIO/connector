@@ -44,4 +44,4 @@ if (process.env.BACKEND_URL === "") {
 
 
 require("./bootstrap.js");
-//require("./autodiscover.js");
+require("./autodiscover.js");
