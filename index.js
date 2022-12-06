@@ -32,7 +32,8 @@ process.env = Object.assign({
     RECONNECT_DELAY: "15",
     ENABLE_SSDP: "true",
     ALLOW_HALF_OPEN: "true",
-    AUTOCONNECT: "true"
+    AUTOCONNECT: "true",
+    STARTUP_DELAY: "0"
 }, env.parsed, process.env);
 
 
@@ -42,6 +43,7 @@ if (process.env.BACKEND_URL === "") {
     process.env.BACKEND_URL += `${process.env.BACKEND_HOST}:${process.env.BACKEND_PORT}`;
 }
 
-
-require("./bootstrap.js");
-require("./autodiscover.js");
+setTimeout(() => {
+    require("./bootstrap.js");
+    require("./autodiscover.js");
+}, Number(process.env.STARTUP_DELAY));

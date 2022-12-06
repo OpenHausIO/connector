@@ -5,16 +5,17 @@ To controll your devices on your local network, it is necessary to have a piece 
 > NOTE: This application is in a eraly developmen state!
 
 ## Environment variables
-| Name             | Default value | Description                                            |
-| ---------------- | ------------- | ------------------------------------------------------ |
-| NODE_ENV         | `production`  | `production` or `development`                          |
-| BACKEND_URL      |               | Full URL to backend. E.g. `http://172.16.0.15:80`      |
-| BACKEND_PROTOCOL | `http`        | Protocol for HTTP/WS requests: `http` or `https`       |
-| BACKEND_HOST     | `127.0.0.1`   | Backend IP/Hostname                                    |
-| BACKEND_PORT     | `8080`        | Backend Webserver port                                 |
-| RECONNECT_DELAY  | `15`          | Delay between disconnect & connecting again in Seconds |
-| ENABLE_SSDP      | `true`        | Enable SSDP Autodiscover?                              |
-| ALLOW_HALF_OPEN  | `false`       | Allow half open bridging                               |
+| Name             | Default value | Description                                                                 |
+| ---------------- | ------------- | --------------------------------------------------------------------------- |
+| NODE_ENV         | `production`  | `production` or `development`                                               |
+| BACKEND_URL      |               | Full URL to backend. E.g. `http://172.16.0.15:80`                           |
+| BACKEND_PROTOCOL | `http`        | Protocol for HTTP/WS requests: `http` or `https`                            |
+| BACKEND_HOST     | `127.0.0.1`   | Backend IP/Hostname                                                         |
+| BACKEND_PORT     | `8080`        | Backend Webserver port                                                      |
+| RECONNECT_DELAY  | `15`          | Delay between disconnect & connecting again in Seconds                      |
+| ENABLE_SSDP      | `true`        | Enable SSDP Autodiscover?                                                   |
+| ALLOW_HALF_OPEN  | `false`       | Allow half open bridging                                                    |
+| STARTUP_DELAY    | `0`           | Delay the startup & first try to establish a ws conneciton with the backend |
 
 ## Installation
 Download the latest version from the [release page](https://github.com/OpenHausIO/connector/releases).<br />
