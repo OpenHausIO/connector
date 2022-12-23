@@ -32,6 +32,8 @@ async function spawn(url2, settings) {
         MAPPINGS.delete(url2);
     });
 
+    console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+
     MAPPINGS.set(url2, worker);
     return Promise.resolve();
 
@@ -58,25 +60,79 @@ module.exports = (map, ws) => {
 
             // handle only device specifiy events.
             // Like added & updated devices rsp. interfaces
-            if (msg.component === "devices" && ["add", "update"].includes(msg.event)) {
+            if (msg.component === "devices") {
 
-                console.log("Handle updated/added devices", msg);
+                let device = null;
 
-                msg.data.interfaces.forEach((iface) => {
+                if (msg.event === "add") {
+                    device = msg.args[0];
+                } else if (msg.event === "update") {
+                    device = msg.args[0];
+                }
 
-                    // parse websocket urls
-                    let url1 = new url.URL(ws.url);
-                    let url2 = new url.URL(`${process.env.BACKEND_URL}/api/devices/${msg.data._id}/interfaces/${iface._id}`);
+                //console.log("Handle updated/added devices", msg);
+                if (["add", "update", "remove"].includes(msg.event)) {
+                    device.interfaces.forEach((iface) => {
 
-                    url2.protocol = url1.protocol;
+                        // parse websocket urls
+                        let url1 = new url.URL(ws.url);
+                        let url2 = new url.URL(`${process.env.BACKEND_URL}/api/devices/${device._id}/interfaces/${iface._id}`);
 
-                    spawn(url2, iface.settings);
+                        // set ws endpoint protocol
+                        url2.protocol = url1.protocol;
 
-                });
+                        if (msg.event === "add") {
 
-            } else {
+                            // bridge added device
+                            spawn(url2.toString(), iface.settings);
 
-                //console.log("[event]", data);
+                        } else if (msg.event === "update") {
+
+                            console.log("iface updated, wait 15s");
+
+                            // get worker instance from mapping
+                            // send "shutdown" message to it
+                            // listen for the exit event with code 0
+                            // respawn worker
+
+                            let worker = MAPPINGS.get(url2.toString());
+
+                            if (!worker) {
+                                return;
+                            }
+
+                            worker.once("exit", (code) => {
+                                if (code === 0) {
+
+                                    setTimeout(() => {
+
+                                        // bridge updated device again
+                                        spawn(url2.toString(), iface.settings);
+
+                                    }, 1500);
+
+                                }
+                            });
+
+                            // tell the worker to disconnect from ws endpoint
+                            worker.postMessage("disconnect");
+
+                        } else if (msg.event === "remove") {
+
+                            // terminate bridiging for removed device
+                            // TODO: Gracefullt shutodwn like in updated 
+                            //MAPPINGS.get(url2.toString()).terminate();
+                            let worker = MAPPINGS.get(url2.toString());
+                            worker.postMessage("disconnect");
+
+                            setTimeout(() => {
+                                worker.terminate();
+                            }, 5000);
+
+                        }
+
+                    });
+                }
 
             }
 
@@ -91,9 +147,9 @@ module.exports = (map, ws) => {
             // override http(s) with ws(s)
             url2.protocol = url1.protocol;
 
-            console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+            //console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
 
-            spawn(url2, settings);
+            spawn(url2.toString(), settings);
 
         }
 

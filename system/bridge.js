@@ -105,6 +105,7 @@ function bridge(uri, settings, options) {
             console.error(`Could not bridge interface ${settings.socket}://${settings.host}:${settings.port}${EOL}`, err);
         });
 
+        return ws;
 
     } catch (err) {
 

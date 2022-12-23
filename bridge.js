@@ -3,7 +3,8 @@
 const { EOL } = require("os");
 const {
     isMainThread,
-    workerData
+    workerData,
+    parentPort
 } = require("worker_threads");
 
 const minimist = require("minimist");
@@ -71,6 +72,21 @@ if (isMainThread && argv.upstream && argv.host && argv.port) {
     let { upstream, settings, options } = workerData;
 
     // bridge the websocket stream to underlaying network socket
-    bridge(upstream, settings, options);
+    let ws = bridge(upstream, settings, options);
+
+    parentPort.on("message", (msg) => {
+
+        console.log("Received msg from parent", msg);
+
+        if (msg === "disconnect") {
+
+            ws.once("close", () => {
+                process.exit(0);
+            });
+
+            ws.close();
+
+        }
+    });
 
 }
