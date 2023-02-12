@@ -31,9 +31,13 @@ process.env = Object.assign({
     BACKEND_PORT: "8080",
     RECONNECT_DELAY: "15",
     ENABLE_SSDP: "true",
+    ENABLE_MDNS: "true",
     ALLOW_HALF_OPEN: "true",
     AUTOCONNECT: "true",
-    STARTUP_DELAY: "0"
+    STARTUP_DELAY: "0",
+    MQTT_HOST: "127.0.0.1",
+    MQTT_PORT: "1883",
+    ENABLE_MQTT: "false"
 }, env.parsed, process.env);
 
 
@@ -45,5 +49,5 @@ if (process.env.BACKEND_URL === "") {
 
 setTimeout(() => {
     require("./bootstrap.js");
-    require("./autodiscover.js");
+    require("./forwarder.js");
 }, Number(process.env.STARTUP_DELAY));
