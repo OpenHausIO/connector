@@ -28,7 +28,13 @@ WORKDIR /opt/OpenHaus/connector
 COPY --from=builder node_modules node_modules
 RUN apk --no-cache add openssl
 
-COPY . ./
+ARG version=unknown
+LABEL version=$version
+
+ARG buildDate=unknown
+LABEL buildDate=$buildDate
+
+COPY build ./
 #COPY ./package.json ./
 
 #ENV HTTP_PORT=8080
