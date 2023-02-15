@@ -9,10 +9,13 @@
     "dev": "./node_modules/.bin/nodemon -w . -w .env index.js",
     "lint": "./node_modules/.bin/eslint .",
     "lint:fix": "./node_modules/.bin/eslint --fix .",
-    "build": "npx pkg .",
     "bundle": "grunt compress",
     "build:docker-image": "docker build . -t openhaus/connector:latest",
-    "postinstall": "scripts/post-install.sh"
+    "postinstall": "scripts/post-install.sh",
+    "build": "grunt build",
+    "build:docker": "grunt build:docker",
+    "publish": "grunt publish",
+    "release": "grunt release"
   },
   "pkg": {
     "scripts": [
@@ -23,8 +26,7 @@
       "node16-linux-x64",
       "node16-windows-x64",
       "node16-darwin-x64"
-    ],
-    "outputPath": "dist"
+    ]
   },
   "repository": {
     "type": "git",
@@ -47,8 +49,7 @@
   "devDependencies": {
     "eslint": "^8.10.0",
     "grunt": "^1.5.3",
-    "grunt-contrib-compress": "^2.0.0",
-    "grunt-env": "^1.0.1",
+    "grunt-contrib-uglify": "^5.2.2",
     "nodemon": "^2.0.15",
     "pkg": "^5.8.0"
   }
