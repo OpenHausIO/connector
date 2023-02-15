@@ -7,6 +7,9 @@ process.env = Object.assign({
     BACKEND_PROTOCOL: "http"
 }, process.env);
 
+const logger = require("./system/logger.js");
+const log = logger.create("forwarder/mdns");
+
 let uri = new url.URL(process.env.BACKEND_URL);
 uri.protocol = (process.env.BACKEND_PROTOCOL === "https" ? "wss" : "ws");
 uri.pathname = "/api/mdns";
@@ -19,7 +22,7 @@ const socket = dgram.createSocket({
 });
 
 ws.on("close", (code) => {
-    console.log(`Disconnected from ${ws.url}`);
+    log.debug(`Disconnected from ${ws.url}`);
     socket.close(() => {
         process.exit(code);
     });
@@ -28,12 +31,10 @@ ws.on("close", (code) => {
 socket.on("listening", () => {
 
     const address = socket.address();
-    console.log(`server listening ${address.address}:${address.port}`);
-
-    console.log("mdnsm udp server listening");
+    log.info(`Server listening udp://${address.address}:${address.port}`);
 
     socket.on("message", (msg, rinfo) => {
-        console.log("mdns, Message", msg, rinfo);
+        log.trace("Message on udp socket received", msg, rinfo);
         ws.send(msg);
     });
 
@@ -42,13 +43,13 @@ socket.on("listening", () => {
 });
 
 ws.on("message", (msg) => {
-    console.log("Send message to multicast addr");
+    log.trace("Send message to multicast addr", msg);
     socket.send(msg, 0, msg.length, 5353, "224.0.0.251");
 });
 
 ws.on("open", () => {
 
-    console.log(`Connected to  ${ws.url}`);
+    log.info(`Connected to ${ws.url}`);
 
     // bind socket
     socket.bind(5353, "0.0.0.0");

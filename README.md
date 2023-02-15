@@ -5,17 +5,26 @@ To controll your devices on your local network, it is necessary to have a piece 
 > NOTE: This application is in a eraly developmen state!
 
 ## Environment variables
-| Name             | Default value | Description                                                                 |
-| ---------------- | ------------- | --------------------------------------------------------------------------- |
-| NODE_ENV         | `production`  | `production` or `development`                                               |
-| BACKEND_URL      |               | Full URL to backend. E.g. `http://172.16.0.15:80`                           |
-| BACKEND_PROTOCOL | `http`        | Protocol for HTTP/WS requests: `http` or `https`                            |
-| BACKEND_HOST     | `127.0.0.1`   | Backend IP/Hostname                                                         |
-| BACKEND_PORT     | `8080`        | Backend Webserver port                                                      |
-| RECONNECT_DELAY  | `15`          | Delay between disconnect & connecting again in Seconds                      |
-| ENABLE_SSDP      | `true`        | Enable SSDP Autodiscover?                                                   |
-| ALLOW_HALF_OPEN  | `false`       | Allow half open bridging                                                    |
-| STARTUP_DELAY    | `0`           | Delay the startup & first try to establish a ws conneciton with the backend |
+| Name             | Default value             | Description                                                                 |
+| ---------------- | ------------------------- | --------------------------------------------------------------------------- |
+| NODE_ENV         | `production`              | `production` or `development`                                               |
+| BACKEND_URL      |                           | Full URL to backend. E.g. `http://172.16.0.15:80`                           |
+| BACKEND_PROTOCOL | `http`                    | Protocol for HTTP/WS requests: `http` or `https`                            |
+| BACKEND_HOST     | `127.0.0.1`               | Backend IP/Hostname                                                         |
+| BACKEND_PORT     | `8080`                    | Backend Webserver port                                                      |
+| RECONNECT_DELAY  | `15`                      | Delay between disconnect & connecting again in Seconds                      |
+| ENABLE_SSDP      | `true`                    | Enable SSDP forwarding (Autodiscover)                                       |
+| ALLOW_HALF_OPEN  | `false`                   | Allow half open bridging                                                    |
+| STARTUP_DELAY    | `0`                       | Delay the startup & first try to establish a ws conneciton with the backend |
+| MQTT_HOST        | `127.0.0.1`               | MQTT Broker host                                                            |
+| MQTT_PORT        | `1883`                    | MQTT Broker port                                                            |
+| ENABLE_MQTT      | `false`                   | Enable MQTT forwarding to backend                                           |
+| ENABLE_MDNS      | `true`                    | Enable MDNS forwarding (Autodiscover)                                       |
+| LOG_PATH         | `<cwd>/logs`              | Logger destination                                                          |
+| LOG_LEVEL        | `info`                    | Logger level                                                                |
+| LOG_DATEFORMAT   | `yyyy.mm.dd - HH:MM.ss.l` | Logger date format                                                          |
+| LOG_SUPPRESS     | `false`                   | Suppress logging                                                            |
+| LOG_TARGET       | ``                        | Logs only set target, e.g. `forwarder/mdns`                                 |
 
 ## Installation
 Download the latest version from the [release page](https://github.com/OpenHausIO/connector/releases).<br />

@@ -6,7 +6,8 @@ const { xml2json } = require("xml-js");
 
 const request = require("./request");
 
-
+const logger = require("./system/logger.js");
+const log = logger.create("forwarder/ssdp");
 
 let uri = new url.URL(process.env.BACKEND_URL);
 uri.protocol = (process.env.BACKEND_PROTOCOL === "https" ? "wss" : "ws");
@@ -21,7 +22,7 @@ const socket = dgram.createSocket({
 
 
 ws.on("close", (code) => {
-    console.log(`Disconnected from ${ws.url}`);
+    log.debug(`Disconnected from ${ws.url}`);
     socket.close(() => {
         process.exit(code);
     });
@@ -98,7 +99,7 @@ function fetchLocation(uri) {
 
 socket.on("message", async (msg, { address, port }) => {
 
-    console.log("Message on udp socket received");
+    log.trace("Message on udp socket received", msg, { address, port });
 
     if (ws.readyState === ws.OPEN) {
         try {
@@ -172,21 +173,20 @@ socket.on("message", async (msg, { address, port }) => {
 socket.on("listening", () => {
 
     const address = socket.address();
-    console.log(`server listening ${address.address}:${address.port}`);
-
-    console.log("udp server listening");
+    log.info(`Server listening udp://${address.address}:${address.port}`);
 
     socket.addMembership("239.255.255.250");
 
 });
 
 ws.on("message", (msg) => {
+    log.trace("Send message to multicast addr", msg);
     socket.send(msg, 0, msg.length, 1900, "239.255.255.250");
 });
 
 ws.on("open", () => {
 
-    console.log(`Connected to  ${ws.url}`);
+    log.info(`Connected to ${ws.url}`);
 
     // bind socket
     socket.bind(1900, "0.0.0.0");

@@ -1,8 +1,7 @@
 const url = require("url");
-
 const WebSocket = require("ws");
-
 const request = require("./request.js");
+const logger = require("./system/logger.js");
 
 // retry flags
 var crashed = false;
@@ -56,7 +55,7 @@ function bootstrap() {
 
             ws.on("open", () => {
 
-                console.log("WebSocket connected to: ", ws.url);
+                logger.debug(`WebSocket connected to: ${ws.url}`);
 
                 resolve(ws);
 
@@ -87,12 +86,9 @@ function bootstrap() {
         counter = 0;
         crashed = false;
 
-        console.log("Read to bridge traffic, interfaces:", map.size, ws.url);
+        logger.debug("Read to bridge traffic");
 
-        if (process.env.ENABLE_SSDP === "true") {
-            //require("./autodiscover.js");
-        }
-
+        require("./forwarder.js");
         require("./handler.js")(map, ws);
 
     }).catch((err) => {
@@ -114,7 +110,7 @@ function retry() {
 
     if (!crashed) {
 
-        console.log("Backend %s not reachable, re try attempt %d...", process.env.BACKEND_URL, counter + 1);
+        logger.warn("Backend %s not reachable, retry attempt %d...", process.env.BACKEND_URL, counter + 1);
 
         setTimeout(() => {
 

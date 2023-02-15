@@ -1,4 +1,7 @@
 const path = require("path");
+const pkg = require("./package.json");
+
+console.log(`Starting Connector v${pkg.version}...`);
 
 // 1) fetch devices from backend
 // 2) buld mapping interface ws endpoint to interface obj (tcp/udp/raw socket)
@@ -18,7 +21,7 @@ try {
     }
 
 } catch (err) {
-    console.log("Could not load dotenv", err.message);
+    //console.log("Could not load dotenv", err.message);
 }
 
 
@@ -37,7 +40,12 @@ process.env = Object.assign({
     STARTUP_DELAY: "0",
     MQTT_HOST: "127.0.0.1",
     MQTT_PORT: "1883",
-    ENABLE_MQTT: "false"
+    ENABLE_MQTT: "false",
+    LOG_PATH: path.resolve(process.cwd(), "logs"),
+    LOG_LEVEL: "info",
+    LOG_DATEFORMAT: "yyyy.mm.dd - HH:MM.ss.l",
+    LOG_SUPPRESS: "false",
+    LOG_TARGET: "",
 }, env.parsed, process.env);
 
 
@@ -49,5 +57,4 @@ if (process.env.BACKEND_URL === "") {
 
 setTimeout(() => {
     require("./bootstrap.js");
-    require("./forwarder.js");
 }, Number(process.env.STARTUP_DELAY));

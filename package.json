@@ -37,6 +37,8 @@
   },
   "homepage": "https://github.com/OpenHausIO/connector#readme",
   "dependencies": {
+    "colors": "^1.4.0",
+    "dateformat": "^4.6.3",
     "dotenv": "^16.0.0",
     "minimist": "^1.2.6",
     "ws": "^8.5.0",

@@ -2,6 +2,7 @@ const url = require("url");
 const {
     Worker
 } = require("worker_threads");
+const logger = require("./system/logger.js");
 
 const MAPPINGS = new Map();
 
@@ -9,7 +10,7 @@ const MAPPINGS = new Map();
 async function spawn(url2, settings) {
 
     if (MAPPINGS.has(url2)) {
-        console.log("Terminating exisitng bridge!", url2);
+        logger.verbose("Terminating exisitng bridge!", url2);
         await MAPPINGS.get(url2).terminate();
     }
 
@@ -23,16 +24,16 @@ async function spawn(url2, settings) {
     });
 
     worker.on("error", (err) => {
-        console.log("Worker error", err);
+        logger.error("Worker error", err);
         MAPPINGS.delete(url2);
     });
 
     worker.on("exit", (code) => {
-        console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port} finished`, code);
+        logger.debug(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port} finished`, code);
         MAPPINGS.delete(url2);
     });
 
-    console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+    logger.debug(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
 
     MAPPINGS.set(url2, worker);
     return Promise.resolve();
@@ -44,14 +45,11 @@ module.exports = (map, ws) => {
 
     /* eslint-disable  no-unused-vars */
     let pendingPromises = Array.from(MAPPINGS).map(([url, worker]) => {
-        console.log("Terminate worker", worker.threadId);
+        logger.verbose("Terminate worker", worker.threadId);
         return worker.terminate();
     });
 
     Promise.all(pendingPromises).then(() => {
-
-        console.log("Span new worker bridges:");
-        console.log("ws protocol: %s, map:", ws.protocol, map);
 
         ws.on("message", (msg) => {
 
@@ -88,7 +86,7 @@ module.exports = (map, ws) => {
 
                         } else if (msg.event === "update") {
 
-                            console.log("iface updated, wait 15s");
+                            logger.debug(`iface ${iface._id} updated, wait 1.5s`);
 
                             // get worker instance from mapping
                             // send "shutdown" message to it
@@ -155,7 +153,7 @@ module.exports = (map, ws) => {
 
     }).catch((err) => {
 
-        console.error("Could not terminate all worker", err);
+        logger.error("Could not terminate all worker", err);
         process.exit(1);
 
     });
