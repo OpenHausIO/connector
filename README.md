@@ -1,6 +1,6 @@
 # Connector
 Forwards traffic between the [backend](https://github.com/OpenHausIO/backend) &amp; local network devices over WebSockets.
-To controll your devices on your local network, it is necessary to have a piece of software running on your local network.
+To control your devices on your local network, it is necessary to have a piece of software running on your local network.
 
 > NOTE: This application is in a eraly developmen state!
 
