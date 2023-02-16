@@ -4,8 +4,8 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/node /opt/connector/index.js
-WorkingDirectory=/opt/connector
+ExecStart=/usr/bin/node /opt/OpenHaus/connector/index.js
+WorkingDirectory=/opt/OpenHaus/connector
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
