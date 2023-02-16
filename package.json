@@ -1,30 +1,55 @@
 {
   "name": "connector",
   "version": "1.0.0",
-  "description": "Connector between backend &amp; local network",
+  "description": "Connector between backend & local network",
   "main": "index.js",
+  "bin": "index.js",
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
-    "start": "./node_modules/.bin/nodemon index.js",
+    "dev": "./node_modules/.bin/nodemon -w . -w .env index.js",
     "lint": "./node_modules/.bin/eslint .",
-    "lint:fix": "./node_modules/.bin/eslint --fix ."
+    "lint:fix": "./node_modules/.bin/eslint --fix .",
+    "bundle": "grunt compress",
+    "postinstall": "scripts/post-install.sh",
+    "build": "grunt build",
+    "build:docker": "grunt build:docker",
+    "publish": "grunt publish",
+    "release": "grunt release"
+  },
+  "pkg": {
+    "scripts": [
+      "http",
+      "https"
+    ],
+    "targets": [
+      "node16-linux-x64",
+      "node16-windows-x64",
+      "node16-darwin-x64"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/OpenHausIO/connector.git"
   },
-  "author": "",
+  "author": "Marc Stirner <marc.stirner@open-haus.io>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/OpenHausIO/connector/issues"
   },
   "homepage": "https://github.com/OpenHausIO/connector#readme",
   "dependencies": {
-    "ws": "^8.5.0"
+    "colors": "^1.4.0",
+    "dateformat": "^4.6.3",
+    "dotenv": "^16.0.0",
+    "minimist": "^1.2.6",
+    "ws": "^8.5.0",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "dotenv": "^16.0.0",
     "eslint": "^8.10.0",
-    "nodemon": "^2.0.15"
+    "grunt": "^1.5.3",
+    "grunt-contrib-uglify": "^5.2.2",
+    "nodemon": "^2.0.15",
+    "pkg": "^5.8.0"
   }
 }

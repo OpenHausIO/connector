@@ -1,15 +1,22 @@
-// this file handles tcp "sockets"
-// forward only payload between backend & socket
-
 const net = require("net");
 
-module.exports = (host, port) => {
+module.exports = ({ host, port }) => {
+
+    /*
+    for(key in options){
+        if(options[key] instanceof Array){
+            socket[key].apply(socket, options[key]);
+        }
+    }
+    */
 
     let socket = new net.Socket();
 
+    // keep socket alive
+    //socket.setKeepAlive(true, 60000);
+
     socket.on("error", (err) => {
-        //cb(err);
-        console.error(`[error] tcp://${host}:${port}`, err)
+        console.error(`[error] tcp://${host}:${port}`, err);
     });
 
     socket.on("close", () => {
@@ -17,7 +24,7 @@ module.exports = (host, port) => {
     });
 
     socket.on("connect", () => {
-        console.error(`[connected] tcp://${host}:${port}`)
+        console.error(`[connected] tcp://${host}:${port}`);
     });
 
     socket.connect(port, host);

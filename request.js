@@ -1,24 +1,16 @@
 const url = require("url");
 
 /**
+ * Does a http request
+ * @param {*} uri 
+ * @param {*} options 
+ * @param {*} cb 
  * 
- * @param {string} uri 
- * @param {options} options 
- * @param {function} cb 
- * @returns 
+ * @ignore
+ * 
+ * @returns {http.ClientRequest} https://nodejs.org/dist/latest-v16.x/docs/api/http.html#class-httpclientrequest
  */
-module.exports = function request(uri, options, cb) {
-
-    if (!cb && options instanceof Function) {
-        cb = options;
-        options = {};
-    }
-
-    options = Object.assign({
-        method: "GET",
-        body: ""
-    }, options);
-
+function perform(uri, options, cb) {
 
     let { protocol } = new url.URL(uri);
 
@@ -46,7 +38,6 @@ module.exports = function request(uri, options, cb) {
             }
 
             cb(null, {
-                url: uri,
                 headers: res.headers,
                 status: res.statusCode,
                 body
@@ -61,9 +52,64 @@ module.exports = function request(uri, options, cb) {
         cb(err);
     });
 
-    request.end(options.body);
+
+    if (options.callEnd) {
+        request.end(options.body);
+    }
     //request.write(options.body + "\r\n");
 
     return request;
+
+}
+
+
+/**
+ *  @function request
+ * Does a http/https request
+ *
+ * @param {String} uri 
+ * @param {Object} options 
+ * @param {Function} cb Callback
+
+ * @returns {http.ClientRequest} https://nodejs.org/dist/latest-v16.x/docs/api/http.html#class-httpclientrequest
+ */
+module.exports = function request(uri, options, cb) {
+
+    if (!cb && options instanceof Function) {
+        cb = options;
+        options = {};
+    }
+
+    if (!cb) {
+        cb = () => { };
+    }
+
+    options = Object.assign({
+        method: "GET",
+        body: "",
+        followRedirects: true,
+        callEnd: true,
+    }, options);
+
+
+    return perform(uri, options, (err, result) => {
+        if (err) {
+
+            cb(err);
+
+        } else {
+
+            if (options.followRedirects && result.status >= 300 && result.status < 400) {
+
+                perform(result.headers.location, options, cb);
+
+            } else {
+
+                cb(null, result);
+
+            }
+
+        }
+    });
 
 };

@@ -1,63 +1,161 @@
-const url = require("url")
-const wsStream = require("./ws-stream.js");
+const url = require("url");
+const {
+    Worker
+} = require("worker_threads");
+const logger = require("./system/logger.js");
 
-const socket_tcp = require("./sockets/tcp.js");
-const socket_udp = require("./sockets/udp.js");
-const socket_raw = require("./sockets/raw.js");
-const socket_ws = require("./sockets/ws.js");
+const MAPPINGS = new Map();
+
+
+async function spawn(url2, settings) {
+
+    if (MAPPINGS.has(url2)) {
+        logger.verbose("Terminating exisitng bridge!", url2);
+        await MAPPINGS.get(url2).terminate();
+    }
+
+    let worker = new Worker("./bridge.js", {
+        workerData: {
+            upstream: String(url2),
+            settings,
+            options: {}
+        },
+        env: process.env
+    });
+
+    worker.on("error", (err) => {
+        logger.error("Worker error", err);
+        MAPPINGS.delete(url2);
+    });
+
+    worker.on("exit", (code) => {
+        logger.debug(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port} finished`, code);
+        MAPPINGS.delete(url2);
+    });
+
+    logger.debug(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+
+    MAPPINGS.set(url2, worker);
+    return Promise.resolve();
+
+}
+
 
 module.exports = (map, ws) => {
 
-    console.log("ws", ws.protocol)
-
-    ws.on("message", (data) => {
-
-        // parse data
-        data = JSON.parse(data);
-
-        // handle only device specifiy events.
-        // Like added & updated devices rsp. interfaces
-        if (data.component === "devices" && ["added", "updated"].includes(data.event)) {
-
-            console.log("Handle updated/added devices", data);
-
-        } else {
-
-            //console.log("[event]", data);
-
-        }
-
+    /* eslint-disable  no-unused-vars */
+    let pendingPromises = Array.from(MAPPINGS).map(([url, worker]) => {
+        logger.verbose("Terminate worker", worker.threadId);
+        return worker.terminate();
     });
 
-    for ([uri, { transport, settings: { host, port } }] of map) {
+    Promise.all(pendingPromises).then(() => {
 
-        // parse websocket urls
-        let url1 = new url.URL(ws.url);
-        let url2 = new url.URL(uri);
+        ws.on("message", (msg) => {
 
-        // override http(s) with ws(s)
-        url2.protocol = url1.protocol;
+            // parse data
+            msg = JSON.parse(msg);
 
-        console.log(`Bridge "%s" <-> ${transport}://${host}:${port}`, url2)
+            // handle only device specifiy events.
+            // Like added & updated devices rsp. interfaces
+            if (msg.component === "devices") {
 
-        try {
+                let device = null;
 
-            let upstream = wsStream(url2, {
-                // duplex stream options
-            });
+                if (msg.event === "add") {
+                    device = msg.args[0];
+                } else if (msg.event === "update") {
+                    device = msg.args[0];
+                }
 
-            let socket = require(`./sockets/${transport}`)(host, port);
+                //console.log("Handle updated/added devices", msg);
+                if (["add", "update", "remove"].includes(msg.event)) {
+                    device.interfaces.forEach((iface) => {
 
-            upstream.pipe(socket);
-            socket.pipe(upstream);
+                        // parse websocket urls
+                        let url1 = new url.URL(ws.url);
+                        let url2 = new url.URL(`${process.env.BACKEND_URL}/api/devices/${device._id}/interfaces/${iface._id}`);
 
+                        // set ws endpoint protocol
+                        url2.protocol = url1.protocol;
 
-        } catch (err) {
+                        if (msg.event === "add") {
 
-            console.error("Error happendm %s", url2, err)
+                            // bridge added device
+                            spawn(url2.toString(), iface.settings);
+
+                        } else if (msg.event === "update") {
+
+                            logger.debug(`iface ${iface._id} updated, wait 1.5s`);
+
+                            // get worker instance from mapping
+                            // send "shutdown" message to it
+                            // listen for the exit event with code 0
+                            // respawn worker
+
+                            let worker = MAPPINGS.get(url2.toString());
+
+                            if (!worker) {
+                                return;
+                            }
+
+                            worker.once("exit", (code) => {
+                                if (code === 0) {
+
+                                    setTimeout(() => {
+
+                                        // bridge updated device again
+                                        spawn(url2.toString(), iface.settings);
+
+                                    }, 1500);
+
+                                }
+                            });
+
+                            // tell the worker to disconnect from ws endpoint
+                            worker.postMessage("disconnect");
+
+                        } else if (msg.event === "remove") {
+
+                            // terminate bridiging for removed device
+                            // TODO: Gracefullt shutodwn like in updated 
+                            //MAPPINGS.get(url2.toString()).terminate();
+                            let worker = MAPPINGS.get(url2.toString());
+                            worker.postMessage("disconnect");
+
+                            setTimeout(() => {
+                                worker.terminate();
+                            }, 5000);
+
+                        }
+
+                    });
+                }
+
+            }
+
+        });
+
+        for (let [uri, { settings }] of map) {
+
+            // parse websocket urls
+            let url1 = new url.URL(ws.url);
+            let url2 = new url.URL(uri);
+
+            // override http(s) with ws(s)
+            url2.protocol = url1.protocol;
+
+            //console.log(`Bridge ${url2} <-> ${settings.socket}://${settings.host}:${settings.port}`);
+
+            spawn(url2.toString(), settings);
 
         }
 
-    }
+    }).catch((err) => {
+
+        logger.error("Could not terminate all worker", err);
+        process.exit(1);
+
+    });
 
 };

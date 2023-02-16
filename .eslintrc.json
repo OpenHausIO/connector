@@ -8,7 +8,9 @@
         "ecmaVersion": 12
     },
     "ignorePatterns": [
-        "node_modules"
+        "node_modules",
+        "build",
+        "dist"
     ],
     "extends": [
         "eslint:recommended"
@@ -25,6 +27,7 @@
                 "avoidEscape": true, // Does not work https://eslint.org/docs/rules/quotes#avoidescape
                 "allowTemplateLiterals": true
             }
-        ]
+        ],
+        "no-inner-declarations": "off"
     }
 }

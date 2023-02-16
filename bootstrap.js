@@ -1,12 +1,13 @@
 const url = require("url");
-
 const WebSocket = require("ws");
-
 const request = require("./request.js");
+const logger = require("./system/logger.js");
+
+// retry flags
+var crashed = false;
+var counter = 0;
 
 function bootstrap() {
-
-
     Promise.all([
 
         // fetch devices from api
@@ -18,24 +19,21 @@ function bootstrap() {
 
                 } else {
 
-                    let { body, url } = data;
+                    let { body } = data;
                     let map = new Map();
 
-                    body.forEach(({ _id, interfaces }) => {
+                    body.filter(({ enabled }) => {
+                        return enabled;
+                    }).forEach(({ _id, interfaces }) => {
                         interfaces.filter((iface) => {
 
                             // filter only for ehternet interfaces
                             return iface.type === "ETHERNET";
 
-                        }).filter((iface) => {
-
-                            // filter for transport protocols passed as env variable
-                            return process.env.TRANSPORT_FILTER.split(",").includes(iface.transport)
-
                         }).forEach((iface) => {
 
                             // map ws endpoint with interface obj
-                            map.set(`${url}/${_id}/interfaces/${iface._id}`, iface);
+                            map.set(`${process.env.BACKEND_URL}/api/devices/${_id}/interfaces/${iface._id}`, iface);
 
                         });
                     });
@@ -57,45 +55,77 @@ function bootstrap() {
 
             ws.on("open", () => {
 
-                console.log("WebSocket connected to: ", ws.url);
+                logger.debug(`WebSocket connected to: ${ws.url}`);
 
                 resolve(ws);
 
             });
 
             ws.on("error", (err) => {
-                console.error(err);
+                //console.error("Websocket", err);
+                reject(err);
             });
 
-            ws.on("close", () => {
+            ws.on("close", (code) => {
+                if (code === 1006) {
 
-                console.warn("WebSocket conneciton closed, re try...");
-                process.exit(1)
+                    retry();
 
+                } else {
+
+                    console.warn("WebSocket (event) conneciton closed", code);
+
+                }
             });
 
         })
 
     ]).then(([map, ws]) => {
 
-        console.log("Read to bridge traffic, interfaces:", map.size, ws.url);
+        // reset flags
+        counter = 0;
+        crashed = false;
 
+        logger.debug("Read to bridge traffic");
+
+        require("./forwarder.js");
         require("./handler.js")(map, ws);
 
     }).catch((err) => {
+        if (err.code === "ECONNREFUSED") {
 
-        console.error(err);
-        process.exit(1);
+            retry();
 
-        /*
-        setTimeout(() => {
-            bootstrap();
-        }, 3000);
-        */
+        } else {
 
+            console.error(err);
+            process.exit(1);
+
+        }
     });
-
 }
 
 
+function retry() {
+
+    if (!crashed) {
+
+        logger.warn("Backend %s not reachable, retry attempt %d...", process.env.BACKEND_URL, counter + 1);
+
+        setTimeout(() => {
+
+            counter += 1;
+            crashed = false;
+
+            bootstrap();
+
+        }, Number(process.env.RECONNECT_DELAY * 1000) || 3000);
+
+    }
+
+    crashed = true;
+
+}
+
 bootstrap();
+

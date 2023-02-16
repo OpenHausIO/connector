@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenHaus Connector
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/node /opt/OpenHaus/connector/index.js
+WorkingDirectory=/opt/OpenHaus/connector
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+#Environment=BACKEND_URL=http://example.com
+
+[Install]
+WantedBy=multi-user.target
