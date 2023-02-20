@@ -43,6 +43,11 @@ async function spawn(url2, settings) {
 
 module.exports = (map, ws) => {
 
+    if (map.size === 0) {
+        logger.debug("No enabled devices returned, nothing to bridge...");
+        logger.verbose("Waiting for some enabled devices to bridge traffic.");
+    }
+
     /* eslint-disable  no-unused-vars */
     let pendingPromises = Array.from(MAPPINGS).map(([url, worker]) => {
         logger.verbose("Terminate worker", worker.threadId);
