@@ -50,6 +50,7 @@ function bootstrap() {
             let uri = new url.URL(process.env.BACKEND_URL);
             uri.protocol = (process.env.BACKEND_PROTOCOL === "https" ? "wss" : "ws");
             uri.pathname = "/api/events";
+            uri.search = `x-auth-token=${process.env.AUTH_TOKEN}`;
 
             let ws = new WebSocket(uri);
 

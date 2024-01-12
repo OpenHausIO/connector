@@ -43,6 +43,11 @@ async function spawn(url2, settings) {
 
 module.exports = (map, ws) => {
 
+    if (map.size === 0) {
+        logger.debug("No enabled devices returned, nothing to bridge...");
+        logger.verbose("Waiting for some enabled devices to bridge traffic.");
+    }
+
     /* eslint-disable  no-unused-vars */
     let pendingPromises = Array.from(MAPPINGS).map(([url, worker]) => {
         logger.verbose("Terminate worker", worker.threadId);
@@ -56,6 +61,8 @@ module.exports = (map, ws) => {
             // parse data
             msg = JSON.parse(msg);
 
+            logger.verbose("WebSocket message received", msg);
+
             // handle only device specifiy events.
             // Like added & updated devices rsp. interfaces
             if (msg.component === "devices") {
@@ -63,9 +70,15 @@ module.exports = (map, ws) => {
                 let device = null;
 
                 if (msg.event === "add") {
+
                     device = msg.args[0];
+                    logger.debug("Device in backend added", device);
+
                 } else if (msg.event === "update") {
+
                     device = msg.args[0];
+                    logger.debug("Device in backend updated", device);
+
                 }
 
                 //console.log("Handle updated/added devices", msg);

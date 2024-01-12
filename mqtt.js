@@ -13,6 +13,7 @@ const log = logger.create("forwarder/mqtt");
 let uri = new url.URL(process.env.BACKEND_URL);
 uri.protocol = (process.env.BACKEND_PROTOCOL === "https" ? "wss" : "ws");
 uri.pathname = "/api/mqtt";
+uri.search = `x-auth-token=${process.env.AUTH_TOKEN}`;
 const ws = new WebSocket(uri);
 
 

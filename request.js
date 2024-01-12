@@ -18,6 +18,15 @@ function perform(uri, options, cb) {
         throw new Error(`Unspported protocol "${protocol.slice(0, -1)}`);
     }
 
+    if (process.env.AUTH_TOKEN) {
+
+        if (!options.headers) {
+            options.headers = {};
+        }
+
+        options.headers["x-auth-token"] = process.env.AUTH_TOKEN;
+
+    }
 
     let request = require(protocol.slice(0, -1)).request(uri, options, (res) => {
 
