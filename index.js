@@ -46,6 +46,7 @@ process.env = Object.assign({
     LOG_DATEFORMAT: "yyyy.mm.dd - HH:MM.ss.l",
     LOG_SUPPRESS: "false",
     LOG_TARGET: "",
+    AUTH_TOKEN: ""
 }, env.parsed, process.env);
 
 
