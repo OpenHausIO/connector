@@ -3,6 +3,7 @@ const { Duplex } = require("stream");
 
 module.exports = ({ host, port }) => {
 
+    const logger = require("../system/logger.js");
     let socket = dgram.createSocket("udp4");
 
     let stream = new Duplex({
@@ -10,7 +11,7 @@ module.exports = ({ host, port }) => {
             socket.send(chunk, cb);
         },
         read(size) {
-            console.log("Read called", size);
+            logger.verbose(`udp://${host}:${port} Read called`, size);
         },
         end(chunk) {
             if (chunk) {
@@ -21,15 +22,15 @@ module.exports = ({ host, port }) => {
     });
 
     socket.on("error", (err) => {
-        console.error(`[error] udp://${host}:${port}`, err);
+        logger.error(`[error] udp://${host}:${port}`, err);
     });
 
     socket.on("close", () => {
-        console.error(`[closed] udp://${host}:${port}`);
+        logger.debug(`[closed] udp://${host}:${port}`);
     });
 
     socket.on("connect", () => {
-        console.error(`[connected] udp://${host}:${port}`);
+        logger.info(`[connected] udp://${host}:${port}`);
     });
 
     // or use a dirty merge?!

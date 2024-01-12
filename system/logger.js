@@ -7,6 +7,9 @@ const { EOL } = require("os");
 const Logger = require("./class.logger.js");
 const formatter = require("./formatter.js");
 
+if (!process.env.LOG_PATH) {
+    process.env.LOG_PATH = path.resolve(process.cwd(), "logs");
+}
 
 const combined = createWriteStream(path.resolve(process.env.LOG_PATH, "combined.log"), {
     flags: "a"

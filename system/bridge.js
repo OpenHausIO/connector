@@ -15,14 +15,24 @@ function bridge(uri, settings, options) {
             end: false
         }, options);
 
+        let url = uri;
+
+
+        const logger = require("../system/logger.js");
+        uri += `?x-auth-token=${process.env.AUTH_TOKEN}`;
+
         let ws = new WebSocket(uri);
 
+        ws.on("error", (err) => {
+            console.log("WRROR", err);
+        });
+
         ws.on("close", () => {
-            console.log("Disconnected from WebSocket", ws.url);
+            logger.info("[Disconnected]", url);
         });
 
         ws.on("open", () => {
-            console.log("Connected to WebSocket", ws.url);
+            logger.info("[Connected]", url);
         });
 
         let upstream = WebSocket.createWebSocketStream(ws, options);
@@ -67,6 +77,7 @@ function bridge(uri, settings, options) {
                     // NOTE: DRAFT!
                     // NOTE: First tests looks promising 
                     upstream.once("data", (chunk) => {
+                        console.log("REceived data from upstrea, reconnect");
                         loop(chunk);
                     });
 
@@ -102,7 +113,7 @@ function bridge(uri, settings, options) {
         loop();
 
         upstream.on("error", (err) => {
-            console.error(`Could not bridge interface ${settings.socket}://${settings.host}:${settings.port}${EOL}`, err);
+            logger.error(`Could not bridge interface ${settings.socket}://${settings.host}:${settings.port}${EOL}`, err);
         });
 
         return ws;

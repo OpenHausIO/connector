@@ -61,6 +61,8 @@ module.exports = (map, ws) => {
             // parse data
             msg = JSON.parse(msg);
 
+            logger.verbose("WebSocket message received", msg);
+
             // handle only device specifiy events.
             // Like added & updated devices rsp. interfaces
             if (msg.component === "devices") {
@@ -68,9 +70,15 @@ module.exports = (map, ws) => {
                 let device = null;
 
                 if (msg.event === "add") {
+
                     device = msg.args[0];
+                    logger.debug("Device in backend added", device);
+
                 } else if (msg.event === "update") {
+
                     device = msg.args[0];
+                    logger.debug("Device in backend updated", device);
+
                 }
 
                 //console.log("Handle updated/added devices", msg);
