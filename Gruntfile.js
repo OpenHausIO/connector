@@ -1,6 +1,9 @@
 const cp = require("child_process");
 const pkg = require("./package.json");
 const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
+const os = require("os");
 
 const PATH_DIST = path.resolve(process.cwd(), "dist");
 const PATH_BUILD = path.resolve(process.cwd(), "build");
@@ -72,7 +75,14 @@ module.exports = (grunt) => {
             stdio: "inherit"
         });
 
+        /*
         cp.execSync(`docker build . -t openhaus/${pkg.name}:latest ${buildArgs}`, {
+            env: process.env,
+            stdio: "inherit"
+        });
+        */
+
+        cp.execSync(`docker image tag openhaus/${pkg.name}:${pkg.version} openhaus/${pkg.name}:latest`, {
             env: process.env,
             stdio: "inherit"
         });
@@ -86,6 +96,28 @@ module.exports = (grunt) => {
         });
     });
 
+    grunt.registerTask("checksum", () => {
+
+        let m5f = path.join(PATH_DIST, "./checksums.txt");
+
+        fs.rmSync(m5f, { force: true });
+        let files = fs.readdirSync(PATH_DIST);
+        let fd = fs.openSync(m5f, "w");
+
+        files.forEach((name) => {
+
+            let file = path.join(PATH_DIST, name);
+            let content = fs.readFileSync(file);
+            let hasher = crypto.createHash("md5");
+            let hash = hasher.update(content).digest("hex");
+            fs.writeSync(fd, `${hash}\t${name}${os.EOL}`);
+
+        });
+
+        fs.closeSync(fd);
+
+    });
+
     grunt.registerTask("release", () => {
         [
             `mkdir -p ${PATH_BUILD}`,
@@ -96,7 +128,8 @@ module.exports = (grunt) => {
             "npm run build:docker",
             //`pkg build --out-path=${PATH_DIST}`, // -> Fix errors!
             `docker save openhaus/${pkg.name}:latest | gzip > ${path.join(PATH_DIST, `${pkg.name}-v${pkg.version}-docker.tgz`)}`,
-            "grunt compress"
+            "grunt compress",
+            "grunt checksum"
         ].forEach((cmd) => {
             cp.execSync(cmd, {
                 env: process.env,
