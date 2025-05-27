@@ -7,7 +7,7 @@ process.env = Object.assign({
     BACKEND_PROTOCOL: "http"
 }, process.env);
 
-const logger = require("./system/logger.js");
+const logger = require("../system/logger.js");
 const log = logger.create("forwarder/mdns");
 
 let uri = new url.URL(process.env.BACKEND_URL);
@@ -44,7 +44,7 @@ socket.on("listening", () => {
 });
 
 ws.on("message", (msg) => {
-    log.trace("Send message to multicast addr", msg);
+    log.debug("Send message to multicast addr", msg);
     socket.send(msg, 0, msg.length, 5353, "224.0.0.251");
 });
 

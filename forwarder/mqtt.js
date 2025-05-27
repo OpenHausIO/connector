@@ -7,7 +7,7 @@ process.env = Object.assign({
     BACKEND_PROTOCOL: "http"
 }, process.env);
 
-const logger = require("./system/logger.js");
+const logger = require("../system/logger.js");
 const log = logger.create("forwarder/mqtt");
 
 let uri = new url.URL(process.env.BACKEND_URL);

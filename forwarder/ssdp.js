@@ -4,9 +4,9 @@ const url = require("url");
 const WebSocket = require("ws");
 const { xml2json } = require("xml-js");
 
-const request = require("./request");
+const request = require("../helper/request.js");
 
-const logger = require("./system/logger.js");
+const logger = require("../system/logger.js");
 const log = logger.create("forwarder/ssdp");
 
 let uri = new url.URL(process.env.BACKEND_URL);

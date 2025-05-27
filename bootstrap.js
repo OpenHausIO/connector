@@ -1,96 +1,139 @@
-const url = require("url");
 const WebSocket = require("ws");
-const request = require("./request.js");
+const request = require("./helper/request.js");
 const logger = require("./system/logger.js");
+
+const rewriteURL = require("./helper/rewrite-url.js");
+
 
 // retry flags
 var crashed = false;
 var counter = 0;
 
+// 1) fetch devices / interfaes
+// 2) setup ws connections to /events & /system/connector
+// 3) listen for changes in evetns & update interface settings
+// 4) listen for bridge connections & spawn cli worker/child process
+
 function bootstrap() {
-    Promise.all([
 
-        // fetch devices from api
-        new Promise((resolve, reject) => {
-            request(`${process.env.BACKEND_URL}/api/devices`, (err, data) => {
-                if (err) {
+    request(`${process.env.BACKEND_URL}/api/devices`).then((result) => {
 
+        logger.debug(`Fetched ${process.env.BACKEND_URL}/api/devices`);
+
+        let mappings = Object.create(null);
+
+        mappings.i2d = new Map();
+        mappings.i2s = new Map();
+        mappings.url2iface = new Map();
+
+        // build interface/device mapping
+        result.body.filter((device) => {
+
+            return device.enabled;
+
+        }).forEach((device) => {
+
+            //console.log("device", device)
+
+            device.interfaces.forEach((iface) => {
+
+                let { _id, settings } = iface;
+                mappings.i2d.set(_id, device);
+                mappings.i2s.set(_id, settings);
+
+                // legacy map for "handler.js"
+                // remove in furtuher versions
+                mappings.url2iface.set(`${process.env.BACKEND_URL}/api/devices/${device._id}/interfaces/${_id}`, iface);
+
+            });
+
+        });
+
+        return Promise.resolve(mappings);
+
+    }).then((mappings) => {
+        return Promise.all([
+
+            // pass down mapping object
+            Promise.resolve(mappings),
+
+            // connecto to /api/events
+            new Promise((resolve, reject) => {
+
+                let ws = new WebSocket(rewriteURL(`${process.env.BACKEND_URL}/api/events`), {
+                    headers: {
+                        "x-auth-token": process.env.AUTH_TOKEN
+                    }
+                });
+
+                ws.once("open", () => {
+                    logger.debug(`WebSocket connected to "${ws.url}"`);
+                    resolve(ws);
+                });
+
+                ws.once("error", (err) => {
+                    logger.error(`WebSocket error for "${ws.url}":`, err);
                     reject(err);
+                });
 
-                } else {
-
-                    let { body } = data;
-                    let map = new Map();
-
-                    body.filter(({ enabled }) => {
-                        return enabled;
-                    }).forEach(({ _id, interfaces }) => {
-                        interfaces.filter((iface) => {
-
-                            // filter only for ehternet interfaces
-                            return iface.type === "ETHERNET";
-
-                        }).forEach((iface) => {
-
-                            // map ws endpoint with interface obj
-                            map.set(`${process.env.BACKEND_URL}/api/devices/${_id}/interfaces/${iface._id}`, iface);
-
-                        });
-                    });
-
-                    resolve(map);
-
-                }
-            });
-        }),
-
-        // connect to websocket events
-        new Promise((resolve, reject) => {
-
-            let uri = new url.URL(process.env.BACKEND_URL);
-            uri.protocol = (process.env.BACKEND_PROTOCOL === "https" ? "wss" : "ws");
-            uri.pathname = "/api/events";
-            uri.search = `x-auth-token=${process.env.AUTH_TOKEN}`;
-
-            let ws = new WebSocket(uri);
-
-            ws.on("open", () => {
-
-                logger.debug(`WebSocket connected to: ${ws.url}`);
-
-                resolve(ws);
-
-            });
-
-            ws.on("error", (err) => {
-                //console.error("Websocket", err);
-                reject(err);
-            });
-
-            ws.on("close", (code) => {
-                if (code === 1006) {
-
+                ws.once("close", (code) => {
+                    logger.error(`WebSocket connection closed to "${ws.url}", code:`, code);
                     retry();
+                });
 
-                } else {
+            }),
 
-                    console.warn("WebSocket (event) conneciton closed", code);
+            // connect to /api/system/connector
+            new Promise((resolve, reject) => {
 
+                if (process.env.BRIDGE_SOCKETS !== "true") {
+                    return resolve(null);
                 }
-            });
 
-        })
+                let ws = new WebSocket(rewriteURL(`${process.env.BACKEND_URL}/api/system/connector`), {
+                    headers: {
+                        "x-auth-token": process.env.AUTH_TOKEN
+                    }
+                });
 
-    ]).then(([map, ws]) => {
+                ws.once("open", () => {
+                    logger.debug(`WebSocket connected to "${ws.url}"`);
+                    resolve(ws);
+                });
+
+                ws.once("error", (err) => {
+                    logger.error(`WebSocket error for "${ws.url}":`, err);
+                    reject(err);
+                });
+
+                ws.once("close", (code) => {
+                    logger.error(`WebSocket connection closed to "${ws.url}", code:`, code);
+                    retry();
+                });
+
+            })
+
+        ]);
+    }).then(([mappings, events, connector]) => {
 
         // reset flags
         counter = 0;
         crashed = false;
 
-        logger.debug("Read to bridge traffic");
+        logger.info("Read to bridge traffic");
 
+        if (process.env.BRIDGE_SOCKETS === "true") {
+            require("./socket.js")(mappings, connector); // new bridiging
+        }
+
+        if (process.env.BRIDGE_LEGACY === "true") {
+            require("./events.js")(mappings, events);
+            require("./handler.js")(mappings.url2iface, events); // legacy bridiging
+        }
+
+        // without this, the connececto does not detect interfaces changes or new added ones
+        require("./events.js")(mappings, events);
         require("./forwarder.js");
-        require("./handler.js")(map, ws);
 
     }).catch((err) => {
         if (err.code === "ECONNREFUSED") {
@@ -120,7 +163,7 @@ function retry() {
 
             bootstrap();
 
-        }, Number(process.env.RECONNECT_DELAY * 1000) || 3000);
+        }, Number(process.env.RECONNECT_DELAY * 1000));
 
     }
 
@@ -129,4 +172,3 @@ function retry() {
 }
 
 bootstrap();
-
