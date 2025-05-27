@@ -60,10 +60,6 @@ function bootstrap() {
             // connecto to /api/events
             new Promise((resolve, reject) => {
 
-                if (process.env.BRIDGE_LEGACY !== "true") {
-                    return resolve(null);
-                }
-
                 let ws = new WebSocket(rewriteURL(`${process.env.BACKEND_URL}/api/events`), {
                     headers: {
                         "x-auth-token": process.env.AUTH_TOKEN
@@ -135,6 +131,8 @@ function bootstrap() {
             require("./handler.js")(mappings.url2iface, events); // legacy bridiging
         }
 
+        // without this, the connececto does not detect interfaces changes or new added ones
+        require("./events.js")(mappings, events);
         require("./forwarder.js");
 
     }).catch((err) => {
