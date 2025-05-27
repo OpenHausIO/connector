@@ -19,6 +19,7 @@ if [ "$NODE_ENV" = "production" ]; then
 else
 
     # test/development installation
-    npx husky install
+    #npx husky install # deprecated
+    npx husky init
 
 fi
