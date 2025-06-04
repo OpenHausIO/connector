@@ -20,6 +20,7 @@ else
 
     # test/development installation
     #npx husky install # deprecated
-    npx husky init
+    #npx husky init
+    true
 
 fi
