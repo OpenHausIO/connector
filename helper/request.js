@@ -37,6 +37,13 @@ function perform(uri, options, cb) {
         };
     }
 
+    if (process.env.AUTH_TOKEN) {
+        options.headers = {
+            ...(options?.headers || {}),
+            "x-auth-token": process.env.AUTH_TOKEN
+        }
+    }
+
     let request = require(protocol.slice(0, -1)).request(uri, options, (res) => {
 
         let chunks = [];
