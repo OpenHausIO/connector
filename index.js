@@ -46,7 +46,10 @@ process.env = Object.assign({
     LOG_DATEFORMAT: "yyyy.mm.dd - HH:MM.ss.l",
     LOG_SUPPRESS: "false",
     LOG_TARGET: "",
-    AUTH_TOKEN: ""
+    AUTH_TOKEN: "",
+    BRIDGE_LEGACY: "false",
+    BRIDGE_SOCKETS: "true",
+    ALLOWLIST_PATH: path.join(process.cwd(), "allowlist.json")
 }, env.parsed, process.env);
 
 

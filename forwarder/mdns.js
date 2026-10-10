@@ -7,7 +7,7 @@ process.env = Object.assign({
     BACKEND_PROTOCOL: "http"
 }, process.env);
 
-const logger = require("./system/logger.js");
+const logger = require("../system/logger.js");
 const log = logger.create("forwarder/mdns");
 
 let uri = new url.URL(process.env.BACKEND_URL);
@@ -34,9 +34,20 @@ socket.on("listening", () => {
     const address = socket.address();
     log.info(`Server listening udp://${address.address}:${address.port}`);
 
-    socket.on("message", (msg, rinfo) => {
-        log.trace("Message on udp socket received", msg, rinfo);
+    socket.on("message", (msg, { address, port }) => {
+
+        // TODO: check address via class.allowlist.js?
+        // let allowlist = new Allowlist();
+        // await allowlist.load();
+        // allowlist.includes(address)
+
+        log.trace("Message on udp socket received", msg, {
+            address,
+            port
+        });
+
         ws.send(msg);
+
     });
 
     socket.addMembership("224.0.0.251");
@@ -44,7 +55,7 @@ socket.on("listening", () => {
 });
 
 ws.on("message", (msg) => {
-    log.trace("Send message to multicast addr", msg);
+    log.debug("Send message to multicast addr", msg);
     socket.send(msg, 0, msg.length, 5353, "224.0.0.251");
 });
 

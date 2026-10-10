@@ -25,6 +25,9 @@ To control your devices on your local network, it is necessary to have a piece o
 | LOG_DATEFORMAT   | `yyyy.mm.dd - HH:MM.ss.l` | Logger date format                                                          |
 | LOG_SUPPRESS     | `false`                   | Suppress logging                                                            |
 | LOG_TARGET       | ``                        | Logs only set target, e.g. `forwarder/mdns`                                 |
+| AUTH_TOKEN       | ``                        |                                                                             |
+| BRIDGE_LEGACY    | `true`                    | Legacy bridge technice enabled                                              |
+| BRIDGE_SOCKETS   | `true`                    | New socket based bridge technice enabled                                    |
 
 ## Installation
 Download the latest version from the [release page](https://github.com/OpenHausIO/connector/releases).<br />

@@ -85,7 +85,7 @@ function bridge(uri, settings, options) {
             });
 
             stream.on("error", (err) => {
-                if (["ECONNRESET", "ECONNREFUSED"].includes(err.code) && process.env.ALLOW_HALF_OPEN === "true") {
+                if (["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT"].includes(err.code) && process.env.ALLOW_HALF_OPEN === "true") {
 
                     console.log("Coult not connect, half open:", process.env.ALLOW_HALF_OPEN, err);
 

@@ -4,9 +4,9 @@ const url = require("url");
 const WebSocket = require("ws");
 const { xml2json } = require("xml-js");
 
-const request = require("./request");
+const request = require("../helper/request.js");
 
-const logger = require("./system/logger.js");
+const logger = require("../system/logger.js");
 const log = logger.create("forwarder/ssdp");
 
 let uri = new url.URL(process.env.BACKEND_URL);
@@ -100,7 +100,15 @@ function fetchLocation(uri) {
 
 socket.on("message", async (msg, { address, port }) => {
 
-    log.trace("Message on udp socket received", msg, { address, port });
+    // TODO: check address via class.allowlist.js?
+    // let allowlist = new Allowlist();
+    // await allowlist.load();
+    // allowlist.includes(address)
+
+    log.trace("Message on udp socket received", msg, {
+        address,
+        port
+    });
 
     if (ws.readyState === ws.OPEN) {
         try {
@@ -168,6 +176,7 @@ socket.on("message", async (msg, { address, port }) => {
 
         }
     }
+
 });
 
 

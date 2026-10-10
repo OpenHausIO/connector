@@ -25,7 +25,7 @@ forwarder.forEach((file) => {
 
     let run = () => {
 
-        let worker = new Worker(path.resolve(process.cwd(), file), {
+        let worker = new Worker(path.resolve(process.cwd(), "forwarder", file), {
             env: process.env
         });
 
@@ -56,7 +56,7 @@ forwarder.forEach((file) => {
         });
 
         worker.on("error", (err) => {
-            log.error(`Error in worker "${file}"`, err);
+            log.error(`Error in forwarder "${file}"`, err);
         });
 
     };
