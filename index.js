@@ -48,7 +48,8 @@ process.env = Object.assign({
     LOG_TARGET: "",
     AUTH_TOKEN: "",
     BRIDGE_LEGACY: "false",
-    BRIDGE_SOCKETS: "true"
+    BRIDGE_SOCKETS: "true",
+    ALLOWLIST_PATH: path.join(process.cwd(), "allowlist.json")
 }, env.parsed, process.env);
 
 

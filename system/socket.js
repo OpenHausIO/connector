@@ -35,8 +35,17 @@ module.exports = ({ upstream: url, options = {}, socket: proto, host, port }) =>
     let ws = new WebSocket(url, options);
     let stream = WebSocket.createWebSocketStream(ws);
 
-    ws.once("close", (code) => {
-        logger.verbose("ws closed", url, `${proto}://${host}:${port}`, code);
+    ws.once("close", (code, reason) => {
+        if (code === 1008) {
+
+            logger.warn(`Bridge to ${proto}://${host}:${port} terminated:`, reason.toString());
+
+        } else {
+
+            //logger.verbose("ws closed", url, `${proto}://${host}:${port}`, code);
+            //logger.warn("ws closed", url, `${proto}://${host}:${port}`, code);
+
+        }
     });
 
     ws.once("open", () => {

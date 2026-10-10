@@ -34,9 +34,20 @@ socket.on("listening", () => {
     const address = socket.address();
     log.info(`Server listening udp://${address.address}:${address.port}`);
 
-    socket.on("message", (msg, rinfo) => {
-        log.trace("Message on udp socket received", msg, rinfo);
+    socket.on("message", (msg, { address, port }) => {
+
+        // TODO: check address via class.allowlist.js?
+        // let allowlist = new Allowlist();
+        // await allowlist.load();
+        // allowlist.includes(address)
+
+        log.trace("Message on udp socket received", msg, {
+            address,
+            port
+        });
+
         ws.send(msg);
+
     });
 
     socket.addMembership("224.0.0.251");
